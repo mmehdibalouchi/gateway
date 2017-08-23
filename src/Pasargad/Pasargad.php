@@ -124,10 +124,10 @@ class Pasargad extends PortAbstract implements PortInterface
 	 * @throws ParsianErrorException
 	 */
 	protected function verifyPayment()
-	{
-        $processor = new RSAProcessor($this->config->get('gateway.pasargad.certificate-path'),RSAKeyType::XMLFile);
+    {
+        $processor = new RSAProcessor($this->config->get('gateway.pasargad.certificate-path'), RSAKeyType::XMLFile);
         $fields = array('invoiceUID' => Input::get('tref'));
-        $result = Parser::post2https($fields,'https://pep.shaparak.ir/CheckTransactionResult.aspx');
+        $result = Parser::post2https($fields, 'https://pep.shaparak.ir/CheckTransactionResult.aspx');
         $check_array = Parser::makeXMLTree($result);
         if ($check_array['resultObj']['result'] == "True") {
             $fields = array(
@@ -138,13 +138,13 @@ class Pasargad extends PortAbstract implements PortInterface
                 'amount' => $check_array['resultObj']['amount'],
                 'TimeStamp' => date("Y/m/d H:i:s"),
                 'sign' => '',
-                );
+            );
 
-            $data = "#" . $fields['MerchantCode'] . "#" . $fields['TerminalCode'] . "#" . $fields['InvoiceNumber'] ."#" . $fields['InvoiceDate'] . "#" . $fields['amount'] . "#" . $fields['TimeStamp'] ."#";
+            $data = "#" . $fields['MerchantCode'] . "#" . $fields['TerminalCode'] . "#" . $fields['InvoiceNumber'] . "#" . $fields['InvoiceDate'] . "#" . $fields['amount'] . "#" . $fields['TimeStamp'] . "#";
             $data = sha1($data, true);
             $data = $processor->sign($data);
             $fields['sign'] = base64_encode($data);
-            $result = Parser::post2https($fields,"https://pep.shaparak.ir/VerifyPayment.aspx");
+            $result = Parser::post2https($fields, "https://pep.shaparak.ir/VerifyPayment.aspx");
             $array = Parser::makeXMLTree($result);
             if ($array['actionResult']['result'] != "True") {
                 $this->newLog(-1, Enum::TRANSACTION_FAILED_TEXT);
@@ -161,4 +161,5 @@ class Pasargad extends PortAbstract implements PortInterface
             $this->transactionFailed();
             throw new PasargadErrorException(Enum::TRANSACTION_FAILED_TEXT, -1);
         }
+    }
 }
